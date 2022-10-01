@@ -783,6 +783,45 @@
 	M.Jitter(1 * REM * delta_time)
 	..()
 
+/datum/reagent/medicine/adren
+	name = "Adrenaline"
+	description = "It's Epi that synths at crit, it increases bleed, does dizzy, organ dam, mayB increases hunger?"
+	reagent_state = LIQUID
+	color = "#D2FFA"
+	metabolization_rate = 0.75 * REAGENTS_METABOLISM
+
+/datum/reagent/medicine/adren/on_mob_life(mob/living/carbon/M, delta_time, times_fired)
+	if(M.health <= M.crit_threshold + 15)
+		M.adjustBruteLoss(-0.75 * REM * delta_time, 0)
+		M.adjustFireLoss(-0.25 * REM * delta_time, 0)
+		M.adjustOxyLoss(-2 * REM * delta_time, 0) // you feel your heat slow down... X10
+	if(M.losebreath >= 4)
+		M.losebreath -= 2 * REM * delta_time
+	if(M.losebreath < 0)
+		M.losebreath = 0
+	M.adjustStaminaLoss(2.5 * REM * delta_time, 0)
+	M.adjustOrganLoss(ORGAN_SLOT_HEART, 5 * REM * delta_time, 0)
+	M.adjustOrganLoss(ORGAN_SLOT_LIVER, 5 * REM * delta_time, 0)
+	if(DT_PROB(25, delta_time))
+	to_chat(M, span_notice(pick("You feel beads of sweat form on your skin." "Your body suddenly feels cold and clammy."))
+		M.drop_all_held_items()
+		M.Dizzy(5)
+		M.Jitter(5)
+		M.blur_eyes(20)
+	if(DT_PROB(10, delta_time))
+		M.vomit(10)
+	if(DT_PROB(5, delta_time))
+		to_chat(M, span_warning("You feel like you're about to pass out!")
+		M.Paralyze(5)
+	..()
+
+/datum/reagent/medicine/adren/on_mob_metabolize(mob/living/M)
+	if(!ishuman(M))
+		return
+
+	var/mob/living/carbon/human/blood_boy = M
+	blood_boy.physiology?.bleed_mod *= 1.15
+
 /datum/reagent/medicine/epinephrine
 	name = "Epinephrine"
 	description = "Very minor boost to stun resistance. Slowly heals damage if a patient is in critical condition, as well as regulating oxygen loss. Overdose causes weakness and toxin damage."
